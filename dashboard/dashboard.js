@@ -83,7 +83,7 @@ const TICK_STYLE = {
 // Load and process CSV
 // ==========================================
 
-Papa.parse('../data/cleaned_data.csv', {
+Papa.parse('../dashboard/cleaned_data.csv', {
     download: true,
     header: true,
     dynamicTyping: true,
