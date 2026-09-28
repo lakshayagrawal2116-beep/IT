@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Service Desk Performance Dashboard</title>
+    <meta name="description" content="Interactive IT Service Desk Analytics Dashboard — Ticket trends, SLA compliance, resolution metrics, and customer satisfaction insights.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <!-- PapaParse for CSV -->
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <!-- Chart.js Datalabels Plugin -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.2.0/dist/chartjs-plugin-datalabels.min.js"></script>
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Animated background orbs -->
+    <div class="bg-orb bg-orb-1"></div>
+    <div class="bg-orb bg-orb-2"></div>
+    <div class="bg-orb bg-orb-3"></div>
+
+    <!-- Header -->
+    <header class="dashboard-header">
+        <div class="header-content">
+            <div class="header-left">
+                <div class="logo-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                        <path d="M2 17l10 5 10-5"/>
+                        <path d="M2 12l10 5 10-5"/>
+                    </svg>
+                </div>
+                <div>
+                    <h1>IT Service Desk Performance</h1>
+                    <p class="header-subtitle">Real-time Analytics Dashboard</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <div class="header-badge">
+                    <span class="pulse-dot"></span>
+                    <span>Live Data</span>
+                </div>
+                <div class="header-date" id="headerDate"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loader">
+            <div class="loader-ring"></div>
+            <p>Loading dashboard data...</p>
+        </div>
+    </div>
+
+    <main class="dashboard-main">
+        <!-- KPI Cards Row -->
+        <section class="kpi-section" id="kpiSection">
+            <div class="kpi-card" id="kpiTotalTickets">
+                <div class="kpi-icon kpi-icon-blue">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                        <line x1="16" y1="13" x2="8" y2="13"/>
+                        <line x1="16" y1="17" x2="8" y2="17"/>
+                    </svg>
+                </div>
+                <div class="kpi-value" id="totalTickets">—</div>
+                <div class="kpi-label">Total Tickets</div>
+            </div>
+            <div class="kpi-card" id="kpiResolved">
+                <div class="kpi-icon kpi-icon-green">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                        <polyline points="22 4 12 14.01 9 11.01"/>
+                    </svg>
+                </div>
+                <div class="kpi-value" id="resolvedRate">—</div>
+                <div class="kpi-label">Resolution Rate</div>
+            </div>
+            <div class="kpi-card" id="kpiAvgResolution">
+                <div class="kpi-icon kpi-icon-amber">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <polyline points="12 6 12 12 16 14"/>
+                    </svg>
+                </div>
+                <div class="kpi-value" id="avgResolution">—</div>
+                <div class="kpi-label">Avg Resolution (hrs)</div>
+            </div>
+            <div class="kpi-card" id="kpiSatisfaction">
+                <div class="kpi-icon kpi-icon-purple">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                </div>
+                <div class="kpi-value" id="avgSatisfaction">—</div>
+                <div class="kpi-label">Avg Satisfaction</div>
+            </div>
+            <div class="kpi-card" id="kpiSLA">
+                <div class="kpi-icon kpi-icon-teal">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                </div>
+                <div class="kpi-value" id="slaRate">—</div>
+                <div class="kpi-label">SLA Compliance</div>
+            </div>
+            <div class="kpi-card" id="kpiOpenTickets">
+                <div class="kpi-icon kpi-icon-rose">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="8" x2="12" y2="12"/>
+                        <line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                </div>
+                <div class="kpi-value" id="openTickets">—</div>
+                <div class="kpi-label">Open Tickets</div>
+            </div>
+        </section>
+
+        <!-- Charts Row 1 -->
+        <section class="charts-row">
+            <div class="chart-card chart-card-large">
+                <div class="chart-header">
+                    <h3>Ticket Volume Trend</h3>
+                    <span class="chart-badge">Monthly</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="trendChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Tickets by Status</h3>
+                </div>
+                <div class="chart-container chart-container-doughnut">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Row 2 -->
+        <section class="charts-row">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Tickets by Category</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Tickets by Priority</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="priorityChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Row 3 -->
+        <section class="charts-row">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Channel Distribution</h3>
+                </div>
+                <div class="chart-container chart-container-doughnut">
+                    <canvas id="channelChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card chart-card-large">
+                <div class="chart-header">
+                    <h3>Avg Resolution Hours by Priority</h3>
+                    <span class="chart-badge chart-badge-amber">Performance</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="resolutionByPriorityChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Row 4 -->
+        <section class="charts-row">
+            <div class="chart-card chart-card-large">
+                <div class="chart-header">
+                    <h3>SLA Compliance by Priority</h3>
+                    <span class="chart-badge chart-badge-teal">SLA</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="slaChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Customer Satisfaction Distribution</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="satisfactionChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Row 5 -->
+        <section class="charts-row">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Top 10 Products by Tickets</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="productChart"></canvas>
+                </div>
+            </div>
+            <div class="chart-card">
+                <div class="chart-header">
+                    <h3>Tickets by Day of Week</h3>
+                </div>
+                <div class="chart-container">
+                    <canvas id="dayChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Row 6 -->
+        <section class="charts-row">
+            <div class="chart-card chart-card-full">
+                <div class="chart-header">
+                    <h3>Satisfaction Score by Category & Priority</h3>
+                    <span class="chart-badge chart-badge-purple">Heatmap</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="heatmapChart"></canvas>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="dashboard-footer">
+        <p>IT Service Desk Performance Dashboard &bull; Data Analytics Project &bull; Built with Chart.js</p>
+    </footer>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
